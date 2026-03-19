@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>終極賽博專注站 2026</title>
+    <style>
+        :root {
+            --neon-blue: #00f2fe;
+            --neon-pink: #ff0080;
+            --glass: rgba(0, 0, 0, 0.7);
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background: #000; color: white; overflow: hidden;
+        }
+
+        /* YouTube 背景 */
+        .video-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none;
+        }
+        .video-background iframe {
+            width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.45); z-index: 0;
+        }
+
+        .main-ui {
+            position: relative; z-index: 10;
+            display: grid; grid-template-columns: 320px 1fr 320px;
+            gap: 25px; padding: 40px; height: 100vh; align-items: center;
+        }
+
+        .glass-card {
+            background: var(--glass); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px; padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        /* 霓虹時鐘 */
+        #time {
+            font-size: 7.5rem; font-weight: 900; margin: 0;
+            color: #fff; text-align: center;
+            text-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue);
+            animation: flicker 5s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 62%, 64%, 70%, 100% { opacity: 1; }
+            20%, 63%, 65% { opacity: 0.85; text-shadow: 0 0 5px var(--neon-blue); }
+        }
+
+        h3 { color: var(--neon-pink); letter-spacing: 3px; font-size: 1.1rem; margin-top: 0; border-bottom: 1px solid rgba(255,0,128,0.3); padding-bottom: 10px; }
+        
+        /* 待辦清單 */
+        .todo-input { width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 10px; outline: none; }
+        .todo-item { background: rgba(255,255,255,0.05); margin: 8px 0; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; border-left: 4px solid var(--neon-blue); }
+        .todo-item button { background: none; border: none; color: #ff4b2b; cursor: pointer; font-size: 1.2rem; }
+        
+        /* 番茄鐘 */
+        .timer-display { font-size: 3.5rem; text-align: center; color: var(--neon-blue); font-weight: bold; margin: 15px 0; font-family: 'Courier New', Courier, monospace; }
+        .btn-pomo { background: var(--neon-blue); border: none; padding: 10px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; color: #000; }
+        
+        .footer-quote { grid-column: 2; text-align: center; margin-top: 30px; font-size: 1.2rem; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+        input[type="range"] { width: 100%; accent-color: var(--neon-blue); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="video-background">
+        <iframe src="https://www.youtube.com/embed/ilUbCLjEkUE?autoplay=1&mute=1&loop=1&playlist=ilUbCLjEkUE&controls=0&modestbranding=1" frameborder="0"></iframe>
+    </div>
+    <div class="overlay"></div>
+
+    <div class="main-ui">
+        <div class="glass-card">
+            <h3>📂 執行清單</h3>
+            <input type="text" id="todo-input" class="todo-input" placeholder="輸入任務後按 Enter..." onkeydown="if(event.key==='Enter') addTodo()">
+            <div id="todo-list" style="margin-top:20px; max-height: 400px; overflow-y: auto;"></div>
+        </div>
+
+        <div style="text-align: center;">
+            <div id="date" style="letter-spacing: 8px; opacity: 0.8; font-size: 1.2rem;">2026年3月19日 星期四</div>
+            <h1 id="time">00:00:00</h1>
+            <div id="weather" style="margin-top:15px; font-weight: bold; color: var(--neon-blue);">[ 衛星通訊連線中... ]</div>
+            <div class="footer-quote" id="quote-text">「極限不存在，除非你自己定義它。」</div>
+        </div>
+
+        <div class="glass-card">
+            <h3>⏳ 番茄鐘專注</h3>
+            <div class="timer-display" id="pomo-timer">25:00</div>
+            <button onclick="togglePomo()" id="pomo-btn" class="btn-pomo">開始專注</button>
+            <button onclick="resetPomo()" style="background:transparent; border:1px solid white; color:white; width:100%; padding:8px; border-radius:12px; cursor:pointer;">重設</button>
+
+            <h3 style="margin-top:40px;">🎧 神經噪音混音</h3>
+            <div style="font-size:0.9rem; line-height: 2;">
+                城市雨聲 <input type="range" min="0" max="1" step="0.1" value="0" oninput="controlSnd('rain', this.value)">
+                深空頻率 <input type="range" min="0" max="1" step="0.1" value="0" oninput="controlSnd('space', this.value)">
+            </div>
+        </div>
+    </div>
+
+    <audio id="snd-rain" loop src="https://assets.mixkit.co/active_storage/sfx/2536/2536-preview.mp3"></audio>
+    <audio id="snd-space" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+
+    <script>
+        // 1. 全方位時間邏輯
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
+                            now.getMinutes().toString().padStart(2, '0') + ":" + 
+                            now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('time').innerText = timeStr;
+            
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('date').innerText = now.toLocaleDateString('zh-TW', options);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 2. 任務清單 (在地化存儲)
+        let todos = JSON.parse(localStorage.getItem('cyber-tasks') || '[]');
+        function renderTodos() {
+            document.getElementById('todo-list').innerHTML = todos.map((t, i) => `
+                <div class="todo-item">
+                    <span>${t}</span>
+                    <button onclick="removeTodo(${i})">✕</button>
+                </div>
+            `).join('');
+            localStorage.setItem('cyber-tasks', JSON.stringify(todos));
+        }
+        function addTodo() {
+            const input = document.getElementById('todo-input');
+            if(input.value.trim()) {
+                todos.push(input.value.trim());
+                input.value = '';
+                renderTodos();
+            }
+        }
+        function removeTodo(i) {
+            todos.splice(i, 1);
+            renderTodos();
+        }
+        renderTodos();
+
+        // 3. 番茄鐘邏輯
+        let pTime = 25*60, pInt = null;
+        function togglePomo() {
+            if(pInt) {
+                clearInterval(pInt); pInt = null;
+                document.getElementById('pomo-btn').innerText = "繼續專注";
+            } else {
+                if (Notification.permission !== "granted") Notification.requestPermission();
+                document.getElementById('pomo-btn').innerText = "暫停";
+                pInt = setInterval(() => {
+                    pTime--;
+                    const m = Math.floor(pTime/60), s = pTime%60;
+                    document.getElementById('pomo-timer').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                    if(pTime <= 0) {
+                        clearInterval(pInt);
+                        new Notification("專注結束！", { body: "做得好，休息一下吧。" });
+                        resetPomo();
+                    }
+                }, 1000);
+            }
+        }
+        function resetPomo() {
+            clearInterval(pInt); pInt = null; pTime = 25*60;
+            document.getElementById('pomo-timer').innerText = "25:00";
+            document.getElementById('pomo-btn').innerText = "開始專注";
+        }
+
+        // 4. 環境音控制
+        function controlSnd(id, v) {
+            const a = document.getElementById('snd-'+id);
+            a.volume = v;
+            if(v > 0) a.play().catch(e => console.log("需互動才能播放音訊"));
+            else a.pause();
+        }
+
+        // 5. 繁體中文金句庫
+        const quotes = [
+            "「今天的自律，是明天的自由。」",
+            "「不要讓昨天的雨，打濕今天的陽光。」",
+            "「卓越不是行為，而是習慣。」",
+            "「當你的才華還撐不起你的野心時，就該靜下心來學習。」",
+            "「你必須非常努力，才能看起來毫不費力。」",
+            "「所有的錯誤都是為了成就更好的你。」"
+        ];
+        setInterval(() => {
+            const quoteEl = document.getElementById('quote-text');
+            quoteEl.style.opacity = 0;
+            setTimeout(() => {
+                quoteEl.innerText = quotes[Math.floor(Math.random()*quotes.length)];
+                quoteEl.style.opacity = 1;
+            }, 800);
+        }, 8000);
+
+        // 模擬氣象數據
+        setTimeout(() => { 
+            document.getElementById('weather').innerText = "📍 新北市 瑞芳區 | ☁️ 陰轉晴 | 溫度 22°C | 濕度 78%"; 
+        }, 2000);
+    </script>
+</body>
+</html>
